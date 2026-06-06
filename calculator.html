@@ -4,11 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Калькулятор</title>
+    <script>
+        (function () {
+            const saved = localStorage.getItem('calculator-theme');
+            const theme = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        :root {
+            --bg-start: #667eea;
+            --bg-end: #764ba2;
+            --calc-bg: #ffffff;
+            --calc-shadow: rgba(0, 0, 0, 0.3);
+            --display-bg: #1a1a1a;
+            --display-color: #ffffff;
+            --btn-bg: #f0f0f0;
+            --btn-color: #333333;
+            --btn-hover-bg: #e0e0e0;
+            --btn-shadow: rgba(0, 0, 0, 0.2);
+            --toggle-bg: #f0f0f0;
+            --toggle-color: #333333;
+            --toggle-hover-bg: #e0e0e0;
+            --history-bg: #f8f8f8;
+            --history-border: #e8e8e8;
+            --history-title: #333333;
+            --history-muted: #888888;
+            --history-item-hover: #eeeeee;
+            --history-result: #667eea;
+        }
+
+        [data-theme="dark"] {
+            --bg-start: #1a1a2e;
+            --bg-end: #0f3460;
+            --calc-bg: #2d2d44;
+            --calc-shadow: rgba(0, 0, 0, 0.5);
+            --display-bg: #0d0d14;
+            --display-color: #e8e8e8;
+            --btn-bg: #3d3d5c;
+            --btn-color: #e8e8e8;
+            --btn-hover-bg: #4d4d6c;
+            --btn-shadow: rgba(0, 0, 0, 0.4);
+            --toggle-bg: #3d3d5c;
+            --toggle-color: #e8e8e8;
+            --toggle-hover-bg: #4d4d6c;
+            --history-bg: #252538;
+            --history-border: #3d3d5c;
+            --history-title: #e8e8e8;
+            --history-muted: #9999aa;
+            --history-item-hover: #353550;
+            --history-result: #8b9cf7;
         }
 
         body {
@@ -17,22 +68,172 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-end) 100%);
             padding: 20px;
+            transition: background 0.3s ease;
         }
 
-        .calculator {
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 30px;
-            max-width: 400px;
+        .app {
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+            max-width: 720px;
             width: 100%;
         }
 
+        .calculator {
+            background: var(--calc-bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px var(--calc-shadow);
+            padding: 30px;
+            flex: 1;
+            min-width: 0;
+            max-width: 400px;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .history-panel {
+            background: var(--calc-bg);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px var(--calc-shadow);
+            padding: 20px;
+            flex: 1;
+            min-width: 0;
+            max-width: 280px;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            gap: 10px;
+        }
+
+        .history-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--history-title);
+        }
+
+        .history-clear {
+            background: var(--toggle-bg);
+            color: var(--toggle-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            white-space: nowrap;
+        }
+
+        .history-clear:hover {
+            background: var(--toggle-hover-bg);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .history-list {
+            list-style: none;
+            overflow-y: auto;
+            flex: 1;
+            max-height: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .history-empty {
+            color: var(--history-muted);
+            font-size: 0.875rem;
+            text-align: center;
+            padding: 24px 8px;
+        }
+
+        .history-item {
+            background: var(--history-bg);
+            border: 1px solid var(--history-border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background: var(--history-item-hover);
+        }
+
+        .history-expression {
+            font-size: 0.8rem;
+            color: var(--history-muted);
+            word-break: break-all;
+        }
+
+        .history-result {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--history-result);
+            margin-top: 2px;
+        }
+
+        @media (max-width: 680px) {
+            .app {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .calculator,
+            .history-panel {
+                max-width: 400px;
+                width: 100%;
+            }
+
+            .history-list {
+                max-height: 200px;
+            }
+        }
+
+        .calculator-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .theme-toggle {
+            background: var(--toggle-bg);
+            color: var(--toggle-color);
+            border: none;
+            border-radius: 10px;
+            width: 44px;
+            height: 44px;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .theme-toggle:hover {
+            background: var(--toggle-hover-bg);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--btn-shadow);
+        }
+
+        .theme-toggle:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
         .display {
-            background: #1a1a1a;
-            color: #ffffff;
+            background: var(--display-bg);
+            color: var(--display-color);
             font-size: 2.5rem;
             padding: 20px;
             text-align: right;
@@ -44,6 +245,7 @@
             justify-content: flex-end;
             word-wrap: break-word;
             overflow-wrap: break-word;
+            transition: background 0.3s ease, color 0.3s ease;
         }
 
         .buttons {
@@ -53,7 +255,7 @@
         }
 
         button {
-            background: #f0f0f0;
+            background: var(--btn-bg);
             border: none;
             border-radius: 10px;
             font-size: 1.5rem;
@@ -61,18 +263,18 @@
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 600;
-            color: #333;
+            color: var(--btn-color);
         }
 
         button:hover {
-            background: #e0e0e0;
+            background: var(--btn-hover-bg);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 5px 15px var(--btn-shadow);
         }
 
         button:active {
             transform: translateY(0);
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 5px var(--btn-shadow);
         }
 
         .operator {
@@ -108,35 +310,142 @@
     </style>
 </head>
 <body>
-    <div class="calculator">
-        <div class="display" id="display">0</div>
-        <div class="buttons">
-            <button class="clear" onclick="clearDisplay()">C</button>
-            <button class="operator" onclick="appendOperator('/')">/</button>
-            <button class="operator" onclick="appendOperator('*')">×</button>
-            <button class="operator" onclick="deleteLast()">⌫</button>
-            
-            <button onclick="appendNumber('7')">7</button>
-            <button onclick="appendNumber('8')">8</button>
-            <button onclick="appendNumber('9')">9</button>
-            <button class="operator" onclick="appendOperator('-')">-</button>
-            
-            <button onclick="appendNumber('4')">4</button>
-            <button onclick="appendNumber('5')">5</button>
-            <button onclick="appendNumber('6')">6</button>
-            <button class="operator" onclick="appendOperator('+')">+</button>
-            
-            <button onclick="appendNumber('1')">1</button>
-            <button onclick="appendNumber('2')">2</button>
-            <button onclick="appendNumber('3')">3</button>
-            <button class="equals" onclick="calculate()" rowspan="2">=</button>
-            
-            <button class="zero" onclick="appendNumber('0')">0</button>
-            <button onclick="appendDecimal()">.</button>
+    <div class="app">
+        <div class="calculator">
+            <div class="calculator-header">
+                <button class="theme-toggle" id="themeToggle" type="button" aria-label="Переключить тему" title="Переключить тему">🌙</button>
+            </div>
+            <div class="display" id="display">0</div>
+            <div class="buttons">
+                <button class="clear" onclick="clearDisplay()">C</button>
+                <button class="operator" onclick="appendOperator('/')">/</button>
+                <button class="operator" onclick="appendOperator('*')">×</button>
+                <button class="operator" onclick="deleteLast()">⌫</button>
+                
+                <button onclick="appendNumber('7')">7</button>
+                <button onclick="appendNumber('8')">8</button>
+                <button onclick="appendNumber('9')">9</button>
+                <button class="operator" onclick="appendOperator('-')">-</button>
+                
+                <button onclick="appendNumber('4')">4</button>
+                <button onclick="appendNumber('5')">5</button>
+                <button onclick="appendNumber('6')">6</button>
+                <button class="operator" onclick="appendOperator('+')">+</button>
+                
+                <button onclick="appendNumber('1')">1</button>
+                <button onclick="appendNumber('2')">2</button>
+                <button onclick="appendNumber('3')">3</button>
+                <button class="equals" onclick="calculate()" rowspan="2">=</button>
+                
+                <button class="zero" onclick="appendNumber('0')">0</button>
+                <button onclick="appendDecimal()">.</button>
+            </div>
         </div>
+
+        <aside class="history-panel">
+            <div class="history-header">
+                <h2>Журнал</h2>
+                <button class="history-clear" id="historyClear" type="button">Очистить</button>
+            </div>
+            <ul class="history-list" id="historyList"></ul>
+        </aside>
     </div>
 
     <script>
+        const themeToggle = document.getElementById('themeToggle');
+
+        function getTheme() {
+            return document.documentElement.getAttribute('data-theme') || 'light';
+        }
+
+        function updateThemeIcon() {
+            themeToggle.textContent = getTheme() === 'dark' ? '☀️' : '🌙';
+        }
+
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('calculator-theme', theme);
+            updateThemeIcon();
+        }
+
+        function toggleTheme() {
+            setTheme(getTheme() === 'dark' ? 'light' : 'dark');
+        }
+
+        themeToggle.addEventListener('click', toggleTheme);
+        updateThemeIcon();
+
+        const historyList = document.getElementById('historyList');
+        const historyClear = document.getElementById('historyClear');
+        const HISTORY_KEY = 'calculator-history';
+        const HISTORY_LIMIT = 50;
+        let history = [];
+
+        function loadHistory() {
+            try {
+                const saved = localStorage.getItem(HISTORY_KEY);
+                history = saved ? JSON.parse(saved) : [];
+            } catch {
+                history = [];
+            }
+        }
+
+        function saveHistory() {
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        }
+
+        function formatExpression(expr) {
+            return expr.replace(/\*/g, '×');
+        }
+
+        function renderHistory() {
+            if (history.length === 0) {
+                historyList.innerHTML = '<li class="history-empty">Пока нет операций</li>';
+                return;
+            }
+
+            historyList.innerHTML = history.map((entry, index) =>
+                `<li class="history-item" data-index="${index}" title="Подставить результат">
+                    <div class="history-expression">${formatExpression(entry.expression)} =</div>
+                    <div class="history-result">${entry.result}</div>
+                </li>`
+            ).join('');
+        }
+
+        function addHistoryEntry(expression, result) {
+            history.unshift({ expression, result, time: Date.now() });
+            if (history.length > HISTORY_LIMIT) {
+                history.length = HISTORY_LIMIT;
+            }
+            saveHistory();
+            renderHistory();
+        }
+
+        function clearHistory() {
+            history = [];
+            saveHistory();
+            renderHistory();
+        }
+
+        function useHistoryResult(index) {
+            const entry = history[index];
+            if (!entry) return;
+            currentInput = entry.result;
+            shouldResetDisplay = true;
+            updateDisplay();
+        }
+
+        historyList.addEventListener('click', function (event) {
+            const item = event.target.closest('.history-item');
+            if (item) {
+                useHistoryResult(Number(item.dataset.index));
+            }
+        });
+
+        historyClear.addEventListener('click', clearHistory);
+        loadHistory();
+        renderHistory();
+
         let display = document.getElementById('display');
         let currentInput = '0';
         let shouldResetDisplay = false;
@@ -186,26 +495,28 @@
         }
 
         function calculate() {
+            const expressionBefore = currentInput;
+
             try {
-                // Заменяем × на * для вычисления
-                let expression = currentInput.replace(/×/g, '*');
-                
-                // Проверяем на деление на ноль
+                let expression = expressionBefore.replace(/×/g, '*');
+
                 if (expression.includes('/0') && !expression.includes('/0.')) {
                     currentInput = 'Ошибка';
                     updateDisplay();
                     shouldResetDisplay = true;
                     return;
                 }
-                
+
                 const result = Function('"use strict"; return (' + expression + ')')();
-                
+
                 if (isNaN(result) || !isFinite(result)) {
                     currentInput = 'Ошибка';
                 } else {
-                    currentInput = result.toString();
+                    const resultStr = result.toString();
+                    addHistoryEntry(expressionBefore, resultStr);
+                    currentInput = resultStr;
                 }
-                
+
                 updateDisplay();
                 shouldResetDisplay = true;
             } catch (error) {
